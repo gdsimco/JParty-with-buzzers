@@ -1,6 +1,7 @@
 import websocket
 import json
 import pygame
+import logging
 
 from websocket import create_connection
 
@@ -31,20 +32,18 @@ def sendBuzz(color):
   except Exception as e:
     print("failed to buzz: ", e)
 
+def buzzers_listen():
+  logging.info(f"Started physical buzzer listener")
+  pygame.init()
 
-pygame.init()
-j = pygame.joystick.Joystick(0)
-j.init()
+  try:
+      while True:
+          events = pygame.event.get()
+          for event in events:
+              print(event.type)
+              if event.type == pygame.JOYBUTTONDOWN:
+                  print(event.dict, event.joy, event.button, 'pressed')
+                  sendBuzz(buzzers[event.button])
 
-try:
-    while True:
-        events = pygame.event.get()
-        for event in events:
-            print(event.type)
-            if event.type == pygame.JOYBUTTONDOWN:
-                print(event.dict, event.joy, event.button, 'pressed')
-                sendBuzz(buzzers[event.button])
-
-except KeyboardInterrupt:
-    print("EXITING NOW")
-    j.quit()
+  except KeyboardInterrupt:
+      print("EXITING NOW")

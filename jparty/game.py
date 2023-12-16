@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QInputDialog, QApplication, QDialog, QVBoxLayout, QP
 
 
 import threading
+from multiprocessing import Process
 import time
 from dataclasses import dataclass
 import os
@@ -15,6 +16,7 @@ import requests
 
 from jparty.utils import SongPlayer, resource_path, CompoundObject
 from jparty.constants import FJTIME, QUESTIONTIME
+from jparty.physical_buzzers import buzzers_listen
 
 
 class QuestionTimer(object):
@@ -203,6 +205,11 @@ class Game(QObject):
         self.__judgement_round = 0
         self.__sorted_players = None
 
+        logging.info(f"starting buzzer listener thread...")
+        self.__buzzer_thread = Process(target=buzzers_listen)
+        self.__buzzer_thread.daemon = True
+        self.__buzzer_thread.start()
+
         self.buzzer_controller = None
 
         self.keystroke_manager = KeystrokeManager()
@@ -263,7 +270,7 @@ class Game(QObject):
         self.buzz_trigger.connect(self.buzz)
         self.new_player_trigger.connect(self.new_player)
         self.toolate_trigger.connect(self.__toolate)
-
+        
     def startable(self):
         return self.valid_game() and len(self.buzzer_controller.connected_players) > 0
 

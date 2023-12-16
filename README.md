@@ -62,7 +62,7 @@ To debug, run
 `
 pip install -r requirements.txt;
 cd jparty;
-python ../run.py
+python ../run.pyw
 `
 
 Too build from source, run

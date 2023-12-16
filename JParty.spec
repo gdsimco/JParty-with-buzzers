@@ -6,7 +6,7 @@ uname = platform.uname()
 arch = uname.machine
 iconfile = "resources/icon.icns" if uname.system=="Darwin" else "resources/icon.ico"
 
-a = Analysis(['run.py'],
+a = Analysis(['run.pyw'],
              pathex=['.'],
              binaries=[],
              datas=[
