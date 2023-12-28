@@ -126,6 +126,7 @@ class Question:
     answer: str
     category: str
     image_link: str = None
+    video_link: str = None
     image_content: str = None
     value: int = -1
     dd: bool = False

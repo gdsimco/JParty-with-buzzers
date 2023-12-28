@@ -9,6 +9,7 @@ import requests
 import logging
 import json
 from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 from jparty.style import MyLabel, CARDPAL
 from jparty.constants import DEFAULT_CONFIG
@@ -59,6 +60,13 @@ class QuestionWidget(QWidget):
                     # Show image only
                     self.image = self.image.scaledToWidth(self.width() * 12)
                     self.question_label.setPixmap(self.image)
+
+        if question.video_link is not None:
+            # Display youtube video embedded
+            self.video = QWebEngineView()
+            self.video.load(QUrl(question.video_link))
+            self.video.show()
+            self.main_layout.addWidget(self.video)
 
         self.setLayout(self.main_layout)
 

@@ -27,11 +27,12 @@ def list_to_game(s):
                 dd = address in s[n1 - 1][-1]
                 
                 # Extract image link from text
-                process_values = get_image_link(text)
+                process_values = get_links(text)
                 text = process_values['text']
                 image_link = process_values['image_link']
+                video_link = process_values['video_link']
 
-                questions.append(Question(index, text, answer, cat, image_link, None, value, dd))
+                questions.append(Question(index, text, answer, cat, image_link, video_link, None, value, dd))
 
         boards.append(Board(categories, questions, dj=(n1 == 14)))
 
@@ -41,38 +42,48 @@ def list_to_game(s):
     text = fj[2]
     
     # Extract image link from text
-    process_values = get_image_link(text)
+    process_values = get_links(text)
     text = process_values['text']
     image_link = process_values['image_link']
+    video_link = process_values['video_link']
 
     answer = fj[3]
     category = fj[1]
-    question = Question(index, text, answer, category, image_link)
+    question = Question(index, text, answer, category, image_link, video_link)
     boards.append(FinalBoard(category, question))
     date = fj[5]
     comments = fj[7]
     return GameData(boards, date, comments)
 
-def get_image_link(text):
+def get_links(text):
     # Getting the image link:
-    image_link = None
+    link = None
     # Extract image link
-    image_link_pattern = r'\bhttps?:\/\/\S+?\.(?:png|jpe?g|bmp|PNG|JPE?G|BMP)\b'
-    image_link = re.findall(image_link_pattern, text)
-    if image_link:
-        image_link = image_link[0]  # Take the first link if there are multiple
-        logging.info(f"Question with image: {text}, image_link: {image_link}")
+    link_pattern = r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)'
+    link = re.findall(link_pattern, text)
+    if link:
+        link = link[0]  # Take the first link if there are multiple
+        logging.info(f"Question with image: {text}, link: {link}")
     else:
-        image_link = None
-        logging.info(f"Question: {text}, image_link: {image_link}")
+        link = None
+        logging.info(f"Question: {text}, link: {link}")
 
     # Remove image link from text:
-    text_extract_pattern = r'https?:\/\/\S+?\.(?:png|jpe?g|gif|bmp|PNG|JPE?G|BMP)\b'
+    text_extract_pattern = r'https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)'
     text = re.sub(text_extract_pattern, '', text)
+
+    image_link = None
+    video_link = None
+    if link:
+        if re.search(r'youtube\.com', link):
+            video_link = link
+        else:
+            image_link = link
 
     return_values = {
         'text': text,
-        'image_link': image_link
+        'image_link': image_link,
+        'video_link': video_link
     }
     return return_values
 
