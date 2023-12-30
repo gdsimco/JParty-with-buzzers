@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                overflow: hidden;
+            }
+            .video-container {
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+                position: relative;
+            }
+        
+            .video-container iframe {
+                overflow: hidden;
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+            }
+        
+            .video-container iframe {
+                top: -60px;
+                height: calc(100% + 120px);
+            }
+        
+            .video-foreground {
+                pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="video-container" >
+            <div class="video-foreground">
+                <iframe
+                    id="ytplayer"
+                    width="560"
+                    height="315"
+                    title="Video"
+                    frameborder="0"
+                    allowscriptaccess="always"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                >
+                </iframe>
+            </div>
+        </div>
+        <script>
+            (function() {
+                // Get video id and timestamp int from url parameters
+                var urlParams = new URLSearchParams(window.location.search);
+                var videoId = urlParams.get('v');
+                var timestamp = urlParams.get('t');
+                var player = document.getElementById("ytplayer");
+                player.setAttribute("src", "https://www.youtube.com/embed/" + videoId + "?&start=" + timestamp + "&autoplay=1&mute=1")
+            })();
+        </script>
+    </body>
+</html>

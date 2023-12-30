@@ -6,13 +6,20 @@ from PyQt6.QtGui import (
     QPixmap,
 )
 import requests
+import re
 import logging
 import json
-from PyQt6.QtWidgets import QWidget, QVBoxLayout
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
+from PyQt6.QtCore import QUrl
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebEngineCore import QWebEngineSettings
+from PyQt6.QtCore import Qt
 
 from jparty.style import MyLabel, CARDPAL
 from jparty.constants import DEFAULT_CONFIG
-
+from jparty.utils import get_base_path
+import threading
+import time
 
 class QuestionWidget(QWidget):
     def __init__(self, question, parent=None):
@@ -31,7 +38,45 @@ class QuestionWidget(QWidget):
         self.main_layout.addWidget(self.question_label)
         self.main_layout.setContentsMargins(0, 50, 0, 50)
 
-        if question.image_link is not None:
+        if question.video_link is not None:
+            logging.info(f"QUESTION HAS VIDEO, LOADING VIDEO: {question.video_link}")
+            yt_regex = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)\?.*t=([0-9]+)'
+            yt_match = re.match(yt_regex, question.video_link)
+            video_url = None
+            if yt_match:
+                yt_id = yt_match.group(1)
+                yt_time = yt_match.group(2)
+                video_url = f"video.html?v={yt_id}&t={yt_time}"
+            else:
+                yt_regex_no_time = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)'
+                yt_match_no_time = re.match(yt_regex_no_time, question.video_link)
+                if yt_match_no_time:
+                    yt_id = yt_match_no_time.group(1)
+                    video_url = f"video.html?v={yt_id}"
+            if video_url:
+                # Embed youtube clip video
+                self.web_view = QWebEngineView()
+                url = f"http://localhost:8081/{video_url}"
+                logging.info(f"loading url: {url}")
+                self.web_view.load(QUrl(url))
+                self.web_view.page().settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+                # Resize web_view to be half the height of the screen. Scale width relatively
+                self.web_view.setFixedHeight(self.height() * 12)
+                self.web_view.setFixedWidth(self.width() * 7)
+                # Center the web_view horizontally and vertically
+                self.main_layout.addWidget(self.web_view, alignment=Qt.AlignmentFlag.AlignCenter)
+
+                # self.setLayout(self.main_layout)
+
+                def end_video(main_layout, web_view):
+                    time.sleep(10)
+                    main_layout.removeWidget(web_view)
+                    web_view.deleteLater()
+
+                thread = threading.Thread(target=end_video, args=(self.main_layout, self.web_view,))
+                thread.start()
+
+        elif question.image_link is not None:
             logging.info(f"question has image: {question.image_link}")
             if question.image_content is None:
                 try:

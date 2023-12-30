@@ -17,7 +17,7 @@ buzzers = [
   
 def sendBuzz(color):
   try:
-    ws = websocket.create_connection("ws://" + host_ip + ":8080/buzzersocket", timeout=2)
+    ws = websocket.create_connection(f"ws://{host_ip}:8080/buzzersocket", timeout=2)
     connectPayload = json.dumps({'buzzerColor': color, 'message': 'CHECK_IF_EXISTS', 'text': ''})
     ws.send(connectPayload)
     server_res = ws.recv()
