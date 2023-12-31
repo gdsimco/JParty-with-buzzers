@@ -9,6 +9,7 @@ import requests
 import re
 import logging
 import json
+import sys, os
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
 from PyQt6.QtCore import QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
@@ -40,66 +41,7 @@ class QuestionWidget(QWidget):
 
         if question.video_link is not None:
             logging.info(f"QUESTION HAS VIDEO, LOADING VIDEO: {question.video_link}")
-            yt_regex = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)\?.*t=([0-9]+)'
-            yt_match = re.match(yt_regex, question.video_link)
-            video_url = None
-            video_length = VIDEO_PLAY_TIME
-
-            # Convert video url to local server url
-            if yt_match:
-                yt_id = yt_match.group(1)
-                yt_time = yt_match.group(2)
-                video_url = f"video.html?v={yt_id}&t={yt_time}"
-            else:
-                yt_regex_no_time = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)'
-                yt_match_no_time = re.match(yt_regex_no_time, question.video_link)
-                if yt_match_no_time:
-                    yt_id = yt_match_no_time.group(1)
-                    video_url = f"video.html?v={yt_id}"
-
-            if video_url:
-                # Get video length if configured
-                length_regex = r'https:\/\/youtu\.be\/[a-zA-Z0-9\-_]+\?.*l=([0-9]+)'
-                length_match = re.match(length_regex, question.video_link)
-                if length_match:
-                    video_length = int(length_match.group(1))
-
-                # Check if video should only play as audio for contestants
-                audio_only = False
-                audio_only_regex = r'https:\/\/youtu\.be\/[a-zA-Z0-9\-_]+\?.*a=([0-9]+)'
-                audio_only_match = re.match(audio_only_regex, question.video_link)
-                if audio_only_match and audio_only_match.group(1) == '1':
-                    audio_only = True
-                    video_url += '&a=1'
-
-                if not audio_only or (audio_only and parent.host()):
-                    # Embed youtube clip video
-                    self.web_view = QWebEngineView()
-                    # Add space above web_view
-
-                    url = f"http://localhost:8081/{video_url}"
-                    logging.info(f"loading url: {url}")
-                    self.web_view.load(QUrl(url))
-                    self.web_view.page().settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
-
-                    if audio_only or parent.host():
-                        self.web_view.setFixedHeight(self.height() * 5)
-                        self.web_view.setFixedWidth(self.width() * 3)
-                    else:
-                        self.web_view.setFixedHeight(self.height() * 12)
-                        self.web_view.setFixedWidth(self.width() * 7)
-                    
-                    self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
-                    self.main_layout.addWidget(self.web_view, alignment=Qt.AlignmentFlag.AlignCenter)
-
-                    if not audio_only:
-                        def end_video(main_layout, web_view, video_length):
-                            time.sleep(video_length)
-                            main_layout.removeWidget(web_view)
-                            web_view.deleteLater()
-
-                        thread = threading.Thread(target=end_video, args=(self.main_layout, self.web_view, video_length,))
-                        thread.start()
+            self.load_video(parent, question.video_link)
 
         elif question.image_link is not None:
             logging.info(f"question has image: {question.image_link}")
@@ -138,6 +80,71 @@ class QuestionWidget(QWidget):
 
         self.setPalette(CARDPAL)
         self.show()
+    
+    def load_video(self, parent, video_link):
+        try:
+            yt_regex = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)\?.*t=([0-9]+)'
+            yt_match = re.match(yt_regex, video_link)
+            video_url = None
+            video_length = VIDEO_PLAY_TIME
+
+            # Convert video url to local server url
+            if yt_match:
+                yt_id = yt_match.group(1)
+                yt_time = yt_match.group(2)
+                video_url = f"video.html?v={yt_id}&t={yt_time}"
+            else:
+                yt_regex_no_time = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)'
+                yt_match_no_time = re.match(yt_regex_no_time, video_link)
+                if yt_match_no_time:
+                    yt_id = yt_match_no_time.group(1)
+                    video_url = f"video.html?v={yt_id}"
+
+            if video_url:
+                # Get video length if configured
+                length_regex = r'https:\/\/youtu\.be\/[a-zA-Z0-9\-_]+\?.*l=([0-9]+)'
+                length_match = re.match(length_regex, video_link)
+                if length_match:
+                    video_length = int(length_match.group(1))
+
+                # Check if video should only play as audio for contestants
+                audio_only = False
+                audio_only_regex = r'https:\/\/youtu\.be\/[a-zA-Z0-9\-_]+\?.*a=([0-9]+)'
+                audio_only_match = re.match(audio_only_regex, video_link)
+                if audio_only_match and audio_only_match.group(1) == '1':
+                    audio_only = True
+                    video_url += '&a=1'
+
+                if not audio_only or (audio_only and parent.host()):
+                    # Embed youtube clip video
+                    self.web_view = QWebEngineView()
+                    url = f"http://localhost:8081/{video_url}"
+                    logging.info(f"loading url: {url}")
+                    self.web_view.load(QUrl(url))
+                    self.web_view.page().settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+
+                    if audio_only or parent.host():
+                        self.web_view.setFixedHeight(self.height() * 5)
+                        self.web_view.setFixedWidth(self.width() * 3)
+                    else:
+                        self.web_view.setFixedHeight(self.height() * 12)
+                        self.web_view.setFixedWidth(self.width() * 7)
+                    
+                    self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
+                    self.main_layout.addWidget(self.web_view, alignment=Qt.AlignmentFlag.AlignCenter)
+
+                    if not audio_only:
+                        def end_video(main_layout, web_view, video_length):
+                            time.sleep(video_length)
+                            main_layout.removeWidget(web_view)
+                            web_view.deleteLater()
+
+                        thread = threading.Thread(target=end_video, args=(self.main_layout, self.web_view, video_length,))
+                        thread.start()
+        except Exception as e:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+            logging.info(f"error: {exc_type}, {fname}:{exc_tb.tb_lineno}")
 
     def startFontSize(self):
         return self.width() * 0.05
