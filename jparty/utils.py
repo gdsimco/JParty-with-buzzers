@@ -10,14 +10,19 @@ from PyQt6.QtGui import QColor, QFontMetrics
 from PyQt6.QtWidgets import QGraphicsDropShadowEffect, QLabel, QPushButton, QSizePolicy
 from PyQt6.QtCore import Qt, QSize
 
-
-def resource_path(relative_path):
+def get_base_path(file=None):
+    path = ""
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-
+        path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        path = os.path.abspath(".")
+    if file is None:
+        return path
+    return os.path.join(path, file)
+
+def resource_path(relative_path):
+    base_path = get_base_path()
 
     # Read the current theme from the configuration file
     with open('config.json', 'r') as f:
