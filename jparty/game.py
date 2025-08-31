@@ -13,9 +13,11 @@ import logging
 import json
 import requests
 import datetime
+import http.server
+import socketserver
 
 from jparty.utils import SongPlayer, resource_path, CompoundObject
-from jparty.constants import FJTIME, QUESTIONTIME
+from jparty.constants import FJTIME, QUESTIONTIME, VIDEO_PORT
 from jparty.stats import StatsBox
 
 
@@ -126,6 +128,7 @@ class Question:
     answer: str
     category: str
     image_link: str = None
+    video_link: str = None
     image_content: str = None
     value: int = -1
     dd: bool = False
@@ -281,6 +284,16 @@ class Game(QObject):
         self.buzz_trigger.connect(self.buzz)
         self.new_player_trigger.connect(self.new_player)
         self.toolate_trigger.connect(self.__toolate)
+
+        # Setup video server
+        def run_server():
+            with socketserver.TCPServer(("", VIDEO_PORT), http.server.SimpleHTTPRequestHandler) as httpd:
+                print("Serving videos at port", VIDEO_PORT)
+                httpd.serve_forever()
+
+        # Create a new thread and start the server
+        server_thread = threading.Thread(target=run_server)
+        server_thread.start()
 
     def show_stats(self):
         stats_box = StatsBox(self.host_display)
