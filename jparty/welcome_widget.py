@@ -361,6 +361,7 @@ class SettingsMenu(QDialog):
         self.theme_combobox = QComboBox(self)
         self.theme_combobox.addItem("Default")
         self.theme_combobox.addItem("Christmas")
+        self.theme_combobox.addItem("Halloween")
         self.theme_combobox.addItem("EightiesSynthwave")
         self.theme_combobox.setCurrentText(current_theme)
 

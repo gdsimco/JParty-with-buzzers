@@ -185,8 +185,40 @@ class Game(QObject):
     def __init__(self):
         super().__init__()
 
-        with open('config.json', 'r') as f:
-            self.config = json.load(f)
+        with open('config.json', 'r') as config_file:
+            self.config = json.load(config_file)
+
+        with open(resource_path('theme_config.json'), 'r') as theme_config_file:
+            self.theme_config = json.load(theme_config_file)
+
+        print("theme_config:")
+        print(self.theme_config)
+        # Normalize color values from theme_config. Values are expected to be
+        # hex strings like "#RRGGBB" (user-specified). We expose both the
+        # raw hex string (for stylesheets) and a QColor (for painting).
+        colors_block = self.theme_config.get("colors", self.theme_config)
+
+        def _ensure_hash(s):
+            if s is None:
+                return None
+            if isinstance(s, str) and s.startswith("#"):
+                return s
+            if isinstance(s, str):
+                return f"#{s}"
+            return None
+
+        board_tile_color_hex = _ensure_hash(colors_block.get("boardTileColor")) or "#1E90FF"
+        board_tile_highlighted_color_hex = _ensure_hash(colors_block.get("boardTileHighlightedColor")) or "#0B3D91"
+
+        # Expose both hex (useful for stylesheets) and QColor (useful for painting)
+        self.board_tile_color_hex = board_tile_color_hex
+        self.board_tile_highlighted_color_hex = board_tile_highlighted_color_hex
+        self.board_tile_color = QColor(self.board_tile_color_hex)
+        self.board_tile_highlighted_color = QColor(self.board_tile_highlighted_color_hex)
+        logging.info(
+            f"Theme colors - board_tile_color: {self.board_tile_color_hex}, "
+            f"board_tile_highlighted_color: {self.board_tile_highlighted_color_hex}"
+        )
 
         self.host_display = None
         self.main_display = None

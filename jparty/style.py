@@ -2,7 +2,10 @@ from PyQt6.QtWidgets import QStyle, QCommonStyle
 from PyQt6.QtGui import QPalette, QColor
 from PyQt6.QtCore import Qt
 
-from jparty.utils import DynamicLabel, add_shadow
+import json
+import logging
+
+from jparty.utils import DynamicLabel, add_shadow, resource_path
 
 
 class JPartyStyle(QCommonStyle):
@@ -53,8 +56,45 @@ WINDOWPAL.setColor(
     QPalette.ColorGroup.Disabled, QPalette.ColorRole.ButtonText, QColor("#d0d0d0")
 )
 
-JBLUE = QColor("#1010a1")
-DARKBLUE = QColor("#0b0b74")
+# Try to load theme colors from theme_config.json so styles match Game's theme.
+# theme_config.json is expected to contain hex strings for 'boardTileColor' and
+# 'boardTileHighlightedColor'.
+try:
+    with open(resource_path('theme_config.json'), 'r') as _f:
+        _theme = json.load(_f)
+except Exception:
+    _theme = {}
+
+_colors = _theme.get('colors', _theme)
+
+def _ensure_hash(s):
+    if s is None:
+        return None
+    if isinstance(s, str) and s.startswith('#'):
+        return s
+    if isinstance(s, str):
+        return f'#{s}'
+    return None
+
+_board_tile_hex = _ensure_hash(_colors.get('boardTileColor')) or '#1010a1'
+_board_tile_highlighted_hex = _ensure_hash(_colors.get('boardTileHighlightedColor')) or '#0b0b74'
+_board_text_hex = _ensure_hash(_colors.get('boardTextColor')) or '#ffcc00'
+
+# Provide both constant-style names and snake_case names so callers can use either.
+BOARD_TILE_COLOR = QColor(_board_tile_hex)
+BOARD_TILE_HIGHLIGHTED_COLOR = QColor(_board_tile_highlighted_hex)
+
+# Board text color used for money / clue text on the board
+BOARD_TEXT_COLOR = QColor(_board_text_hex)
+
+# Convenience lowercase names requested: board_tile_color, board_tile_highlighted_color
+board_text_color = BOARD_TEXT_COLOR
+
+# Convenience lowercase names requested: board_tile_color, board_tile_highlighted_color
+board_tile_color = BOARD_TILE_COLOR
+board_tile_highlighted_color = BOARD_TILE_HIGHLIGHTED_COLOR
+
 CARDPAL = QPalette()
-CARDPAL.setColor(QPalette.ColorRole.Window, JBLUE)
-CARDPAL.setColor(QPalette.ColorRole.WindowText, QColor("#ffffff"))
+CARDPAL.setColor(QPalette.ColorRole.Window, BOARD_TILE_COLOR)
+CARDPAL.setColor(QPalette.ColorRole.WindowText, QColor('#ffffff'))
+logging.info(f"Style colors - BOARD_TILE_COLOR: {_board_tile_hex}, BOARD_TILE_HIGHLIGHTED_COLOR: {_board_tile_highlighted_hex}, BOARD_TEXT_COLOR: {_board_text_hex}")

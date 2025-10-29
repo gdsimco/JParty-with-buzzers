@@ -6,7 +6,7 @@ import random
 import simpleaudio as sa
 
 from jparty.game import Board
-from jparty.style import MyLabel, CARDPAL, JBLUE, DARKBLUE
+from jparty.style import MyLabel, CARDPAL, board_tile_color, board_tile_highlighted_color, board_text_color
 from jparty.constants import CATEGORY_REVEAL_TIME, QUESTION_REVEAL_TIME, BEFORE_REVEAL_WAIT_TIME
 from jparty.utils import resource_path
 
@@ -43,7 +43,8 @@ class QuestionCard(CardLabel):
         self.game = game
         self.__question = question
         super().__init__(self.__moneytext())
-        self.label.setStyleSheet("color: #ffcc00")
+        # Board text color from theme (QColor) -> use .name() to get hex for stylesheet
+        self.label.setStyleSheet(f"color: {board_text_color.name()}")
         self.label.setAutosizeMargins(0.2)
 
     @property
@@ -85,7 +86,7 @@ class HostQuestionCard(QuestionCard):
             return None
 
         pal = self.palette()
-        pal.setColor(QPalette.ColorRole.Window, JBLUE)
+        pal.setColor(QPalette.ColorRole.Window, board_tile_color)
         self.setPalette(pal)
 
     def enterEvent(self, event):
@@ -93,7 +94,7 @@ class HostQuestionCard(QuestionCard):
             return None
 
         pal = self.palette()
-        pal.setColor(QPalette.ColorRole.Window, DARKBLUE)
+        pal.setColor(QPalette.ColorRole.Window, board_tile_highlighted_color)
         self.setPalette(pal)
 
 
