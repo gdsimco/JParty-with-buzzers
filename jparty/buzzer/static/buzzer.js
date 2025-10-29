@@ -125,8 +125,8 @@ $(document).ready(function() {
     canvas.style.width = "100%";
 
     var bgColor = "#1010a1";
-    if (window.jparty_theme && window.jparty_theme.boardTileColor) {
-        bgColor = window.jparty_theme.boardTileColor;
+    if (window.jparty_theme && window.jparty_theme.nameLabelColor) {
+        bgColor = window.jparty_theme.nameLabelColor;
     }
     signaturePad = new SignaturePad(canvas, {
         penColor: "#ffffff",
