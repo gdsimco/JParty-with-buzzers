@@ -1,5 +1,6 @@
 {
   "boardTileColor": "#1010a1",
   "boardTileHighlightedColor": "#0b0b74",
-  "boardTextColor": "#ffcc00"
+  "boardTextColor": "#ffcc00",
+  "nameLabelColor": "#1010a1"
 }

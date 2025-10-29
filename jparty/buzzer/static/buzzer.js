@@ -124,9 +124,13 @@ $(document).ready(function() {
     const canvas = document.querySelector("canvas");
     canvas.style.width = "100%";
 
+    var bgColor = "#1010a1";
+    if (window.jparty_theme && window.jparty_theme.boardTileColor) {
+        bgColor = window.jparty_theme.boardTileColor;
+    }
     signaturePad = new SignaturePad(canvas, {
         penColor: "#ffffff",
-        backgroundColor: "#1010a1"
+        backgroundColor: bgColor
     });
 
 

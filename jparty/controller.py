@@ -12,6 +12,8 @@ import socket
 from jparty.environ import root
 from jparty.game import Player
 from jparty.constants import MAXPLAYERS, PORT
+import json
+from jparty.utils import resource_path
 
 
 define("port", default=PORT, help="run on the given port", type=int)
@@ -37,7 +39,16 @@ class Application(tornado.web.Application):
 
 class WelcomeHandler(tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html", messages=BuzzerSocketHandler.cache)
+        # Load theme config so the buzzer web page can use theme colors
+        try:
+            with open(resource_path('theme_config.json'), 'r') as tf:
+                theme = json.load(tf)
+        except Exception:
+            theme = {}
+        theme_colors = theme.get('colors', theme)
+        theme_json = json.dumps(theme_colors)
+
+        self.render("index.html", messages=BuzzerSocketHandler.cache, theme=theme_colors, theme_json=theme_json)
 
 
 class BuzzerHandler(tornado.web.RequestHandler):
@@ -47,7 +58,15 @@ class BuzzerHandler(tornado.web.RequestHandler):
             logging.info("set cookie")
         else:
             logging.info(f"cookie: {self.get_cookie('test')}")
-        self.render("play.html", messages=BuzzerSocketHandler.cache)
+        # Pass theme to play page too in case it's needed
+        try:
+            with open(resource_path('theme_config.json'), 'r') as tf:
+                theme = json.load(tf)
+        except Exception:
+            theme = {}
+        theme_colors = theme.get('colors', theme)
+        theme_json = json.dumps(theme_colors)
+        self.render("play.html", messages=BuzzerSocketHandler.cache, theme=theme_colors, theme_json=theme_json)
 
 
 class BuzzerSocketHandler(tornado.websocket.WebSocketHandler):
