@@ -4,6 +4,7 @@ from PyQt6.QtGui import (
     QColor,
     QFont,
     QPixmap,
+    QFontDatabase
 )
 import requests
 import re
@@ -35,7 +36,7 @@ class QuestionWidget(QWidget):
 
         # Question text
         self.question_label = MyLabel(question.text.upper(), self.startFontSize, self)
-        self.question_label.setFont(QFont("ITC_ Korinna"))
+        self.question_label.setFont(QFont(QFontDatabase.applicationFontFamilies(1)))
         self.main_layout.addWidget(self.question_label)
         self.main_layout.setContentsMargins(0, 50, 0, 50)
 
@@ -158,7 +159,7 @@ class HostQuestionWidget(QuestionWidget):
         self.main_layout.setStretchFactor(self.question_label, 6)
         self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
         self.answer_label = MyLabel(question.answer, self.startFontSize, self)
-        self.answer_label.setFont(QFont("ITC_ Korinna"))
+        self.answer_label.setFont(QFont(QFontDatabase.applicationFontFamilies(1)))
         self.main_layout.addWidget(self.answer_label, 1)
 
     def paintEvent(self, event):

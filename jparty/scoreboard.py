@@ -1,4 +1,13 @@
-from PyQt6.QtGui import QPainter, QPixmap, QImage, QPalette, QColor, QIcon
+from PyQt6.QtGui import (
+    QPainter,
+    QPixmap,
+    QImage,
+    QPalette,
+    QColor,
+    QIcon,
+    QFont,
+    QFontDatabase
+)
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton
 from PyQt6.QtCore import Qt, QSize, QPoint
 
@@ -35,13 +44,24 @@ class NameLabel(MyLabel):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         if self.signature is not None:
-            self.setPixmap(
-                self.signature.scaled(
-                    int(self.height() * NameLabel.name_aspect_ratio),
-                    self.height(),
-                    transformMode=Qt.TransformationMode.SmoothTransformation,
-                )
+            orig_w = self.signature.width()
+            orig_h = self.signature.height()
+            bleed_h = max(4, int(self.height() * 0.03))
+
+            # Scale pixmap to fill label width, preserve aspect ratio
+            target_w = self.width() + bleed_h * 2
+            aspect_ratio = orig_w / orig_h if orig_h else 1
+            target_h = int(target_w / aspect_ratio)
+
+            scaled = self.signature.scaled(
+                target_w,
+                target_h,
+                transformMode=Qt.TransformationMode.SmoothTransformation,
             )
+
+            self.setPixmap(scaled)
+            self.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+            self.setContentsMargins(-bleed_h, 0, -bleed_h, 0)
 
 
 class PlayerWidget(QWidget):
@@ -60,6 +80,7 @@ class PlayerWidget(QWidget):
 
         self.name_label = NameLabel(player.name, self)
         self.score_label = MyLabel("$0", self.startScoreFontSize, self)
+        self.score_label.setFont(QFont(QFontDatabase.applicationFontFamilies(0)))
         self.stats_label = MyLabel("", self.height() * 0.8, self)
         self.dummy_stats_label = MyLabel("", self.height() * 0.8, self)
 
