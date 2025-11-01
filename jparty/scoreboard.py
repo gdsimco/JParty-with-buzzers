@@ -1,4 +1,13 @@
-from PyQt6.QtGui import QPainter, QPixmap, QImage, QPalette, QColor, QIcon
+from PyQt6.QtGui import (
+    QPainter,
+    QPixmap,
+    QImage,
+    QPalette,
+    QColor,
+    QIcon,
+    QFont,
+    QFontDatabase
+)
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QPushButton
 from PyQt6.QtCore import Qt, QSize, QPoint
 
@@ -71,6 +80,7 @@ class PlayerWidget(QWidget):
 
         self.name_label = NameLabel(player.name, self)
         self.score_label = MyLabel("$0", self.startScoreFontSize, self)
+        self.score_label.setFont(QFont(QFontDatabase.applicationFontFamilies(0)))
         self.stats_label = MyLabel("", self.height() * 0.8, self)
         self.dummy_stats_label = MyLabel("", self.height() * 0.8, self)
 

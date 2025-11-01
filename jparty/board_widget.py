@@ -1,5 +1,9 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout
-from PyQt6.QtGui import QPalette
+from PyQt6.QtGui import (
+    QFont,
+    QFontDatabase,
+    QPalette
+)
 import time
 import threading
 import random
@@ -17,6 +21,7 @@ class CardLabel(QWidget):
 
         self.label = MyLabel(text, self.startFontSize, parent=self)
         self.label.setAutosizeMargins(0.1)
+        self.label.setFont(QFont(QFontDatabase.applicationFontFamilies(0)))
         self.setPalette(CARDPAL)
         self.setAutoFillBackground(True)
 

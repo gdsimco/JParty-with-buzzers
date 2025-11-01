@@ -74,9 +74,26 @@ def main():
     check_internet()
     app.setFont(QFont("Verdana"))
 
-    i = QFontDatabase.addApplicationFont(
-        resource_path("ITC_ Korinna Normal.ttf")
+    i_board = QFontDatabase.addApplicationFont(
+        resource_path("board_font.ttf")
     )
+    i_question = QFontDatabase.addApplicationFont(
+        resource_path("question_font.ttf")
+    )
+
+    font_families = QFontDatabase.applicationFontFamilies(i_board)
+    if font_families:
+        font_family_name = font_families[0]
+        print(f"Loaded board font family name: {font_family_name}")
+    else:
+        print("Could not retrieve board font family name.")
+    
+    font_families = QFontDatabase.applicationFontFamilies(i_question)
+    if font_families:
+        font_family_name = font_families[0]
+        print(f"Loaded question font family name: {font_family_name}")
+    else:
+        print("Could not retrieve question font family name.")
 
     game = Game()
 
