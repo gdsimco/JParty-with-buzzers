@@ -22,6 +22,7 @@ from jparty.constants import DEFAULT_CONFIG, VIDEO_PLAY_TIME
 from jparty.utils import get_base_path
 import threading
 import time
+from urllib.parse import urlparse, parse_qs
 
 class QuestionWidget(QWidget):
     def __init__(self, question, parent=None):
@@ -81,48 +82,59 @@ class QuestionWidget(QWidget):
 
         self.setPalette(CARDPAL)
         self.show()
-    
+
     def load_video(self, parent, video_link):
         try:
-            yt_regex = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)\?.*t=([0-9]+)'
-            yt_match = re.match(yt_regex, video_link)
+            # --- Parse YouTube URL variants robustly ---
             video_url = None
             video_length = VIDEO_PLAY_TIME
+            audio_only = False
 
-            # Convert video url to local server url
-            if yt_match:
-                yt_id = yt_match.group(1)
-                yt_time = yt_match.group(2)
-                video_url = f"video.html?v={yt_id}&t={yt_time}"
-            else:
-                yt_regex_no_time = r'https:\/\/youtu\.be\/([a-zA-Z0-9\-_]+)'
-                yt_match_no_time = re.match(yt_regex_no_time, video_link)
-                if yt_match_no_time:
-                    yt_id = yt_match_no_time.group(1)
-                    video_url = f"video.html?v={yt_id}"
+            u = urlparse(video_link)
+            host = (u.hostname or "").lower()
+            qs = parse_qs(u.query or "")
+
+            yt_id = None
+            # youtu.be/VIDEOID
+            if "youtu.be" in host and u.path:
+                yt_id = u.path.strip("/")
+
+            # youtube.com/watch?v=VIDEOID
+            if (yt_id is None) and ("youtube.com" in host):
+                yt_id = (qs.get("v") or [None])[0]
+
+            # Build video.html URL if we have an ID
+            if yt_id:
+                parts = [f"video.html?v={yt_id}"]
+
+                # start time (?t=123) — only accept pure digits
+                t_val = (qs.get("t") or [None])[0]
+                if t_val and t_val.isdigit():
+                    parts.append(f"t={t_val}")
+
+                # configured play length (?l=123)
+                l_val = (qs.get("l") or [None])[0]
+                if l_val and l_val.isdigit():
+                    video_length = int(l_val)
+
+                # audio-only flag (?a=1)
+                a_val = (qs.get("a") or [None])[0]
+                if a_val == "1":
+                    audio_only = True
+                    parts.append("a=1")
+
+                video_url = "&".join(parts)
 
             if video_url:
-                # Get video length if configured
-                length_regex = r'https:\/\/youtu\.be\/[a-zA-Z0-9\-_]+\?.*l=([0-9]+)'
-                length_match = re.match(length_regex, video_link)
-                if length_match:
-                    video_length = int(length_match.group(1))
-
-                # Check if video should only play as audio for contestants
-                audio_only = False
-                audio_only_regex = r'https:\/\/youtu\.be\/[a-zA-Z0-9\-_]+\?.*a=([0-9]+)'
-                audio_only_match = re.match(audio_only_regex, video_link)
-                if audio_only_match and audio_only_match.group(1) == '1':
-                    audio_only = True
-                    video_url += '&a=1'
-
                 if not audio_only or (audio_only and parent.host()):
                     # Embed youtube clip video
                     self.web_view = QWebEngineView()
                     url = f"http://localhost:8081/{video_url}"
                     logging.info(f"loading url: {url}")
                     self.web_view.load(QUrl(url))
-                    self.web_view.page().settings().setAttribute(QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+                    self.web_view.page().settings().setAttribute(
+                        QWebEngineSettings.WebAttribute.LocalContentCanAccessRemoteUrls, True
+                    )
 
                     if audio_only or parent.host():
                         self.web_view.setFixedHeight(self.height() * 5)
@@ -130,7 +142,7 @@ class QuestionWidget(QWidget):
                     else:
                         self.web_view.setFixedHeight(self.height() * 12)
                         self.web_view.setFixedWidth(self.width() * 7)
-                    
+
                     self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
                     self.main_layout.addWidget(self.web_view, alignment=Qt.AlignmentFlag.AlignCenter)
 
@@ -146,6 +158,7 @@ class QuestionWidget(QWidget):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             logging.info(f"error: {exc_type}, {fname}:{exc_tb.tb_lineno}")
+
 
     def startFontSize(self):
         return self.width() * 0.05
