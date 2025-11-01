@@ -77,7 +77,7 @@ def get_links(text):
     return_values["text"] = re.sub(text_extract_pattern, '', text)
 
     if link is not None:
-        if "https://youtu.be/" in link:
+        if "youtu.be" in link or "youtube.com" in link:
             return_values["video_link"] = link
         else:
             return_values["image_link"] = link
