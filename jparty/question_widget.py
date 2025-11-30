@@ -189,20 +189,28 @@ class QuestionWidget(QWidget):
 
 class HostQuestionWidget(QuestionWidget):
     def __init__(self, question, parent=None):
-        super().__init__(question, parent)
+        super().__init__(question, parent, show_content=True)
 
         self.question_label.setText(question.text)
-        self.main_layout.setStretchFactor(self.question_label, 6)
+
+        # Set stretch factors based on which content is present
+        has_content = question.image_link is not None or question.video_link is not None
+
+        self.main_layout.setStretchFactor(self.question_label, 3 if has_content else 6)
+        if hasattr(self, 'image_label'):
+            self.main_layout.setStretchFactor(self.image_label, 5)
         self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
+
+        # Add answer label
         self.answer_label = MyLabel(question.answer, self.startFontSize, self)
         self.answer_label.setFont(QFont(QFontDatabase.applicationFontFamilies(1)))
-        self.main_layout.addWidget(self.answer_label, 1)
+        self.main_layout.addWidget(self.answer_label, 2)
 
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
         qp.setPen(QPen(QColor("white")))
-        line_y = self.main_layout.itemAt(1).geometry().top()
+        line_y = self.answer_label.geometry().top() - 25
         qp.drawLine(0, line_y, self.width(), line_y)
 
 
