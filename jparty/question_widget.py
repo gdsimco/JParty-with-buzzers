@@ -25,9 +25,10 @@ import time
 from urllib.parse import urlparse, parse_qs
 
 class QuestionWidget(QWidget):
-    def __init__(self, question, parent=None):
+    def __init__(self, question, parent=None, show_content=True):
         super().__init__(parent)
         self.question = question
+        self.parent = parent
         self.setAutoFillBackground(True)
         self.main_layout = QVBoxLayout()
 
@@ -41,49 +42,58 @@ class QuestionWidget(QWidget):
         self.main_layout.addWidget(self.question_label)
         self.main_layout.setContentsMargins(0, 50, 0, 50)
 
-        if question.video_link is not None:
-            logging.info(f"Question has video, loading video: {question.video_link}")
-            self.load_video(parent, question)
-
-        elif question.image_link is not None:
-            logging.info(f"Question has image: {question.image_link}")
-            if question.image_content is None:
-                try:
-                    request = requests.get(question.image_link, timeout=1)
-                    question.image_content = request.content
-                    logging.info(f"Loaded image: {question.image_link}")
-                except requests.exceptions.RequestException as e:
-                    logging.info(f"Failed to load image: {question.image_link}")
-            
-            logging.info(f"Question has image content: {question.image_content}")
-            if question.image_content is not None and b"html" in question.image_content.lower():
-                question.image_content = None
-
-            disable_images = self.config.get('showtextwithimages', DEFAULT_CONFIG['showtextwithimages']) == 'Only show text'
-
-            if not disable_images and question.image_content is not None and b"Not Found" not in question.image_content:
-                self.image = QPixmap()
-                self.image.loadFromData(question.image_content)
-                
-                if self.config.get('showtextwithimages', DEFAULT_CONFIG['showtextwithimages']) == 'Show both':
-                    # Show both text and image
-                    self.image = self.image.scaledToHeight(self.height() * 12)
-
-                    # Create a QLabel for the image
-                    self.image_label = MyLabel("", self.startFontSize, self)
-                    self.image_label.setPixmap(self.image)
-                    self.main_layout.addWidget(self.image_label)
-                elif self.config.get('showtextwithimages', DEFAULT_CONFIG['showtextwithimages']) == 'Only show image':
-                    # Show image only
-                    self.image = self.image.scaledToWidth(self.width() * 12)
-                    self.question_label.setPixmap(self.image)
+        if show_content:
+            self.show_content()
 
         self.setLayout(self.main_layout)
 
         self.setPalette(CARDPAL)
         self.show()
+    
+    def show_content(self):
+        if self.question.video_link is not None:
+            logging.info(f"Question has video, loading video: {self.question.video_link}")
+            self.load_video()
 
-    def load_video(self, parent, question):
+        elif self.question.image_link is not None:
+            logging.info(f"Question has image: {self.question.image_link}")
+            self.load_image()
+
+    def load_image(self):
+        question = self.question
+        if question.image_content is None:
+            try:
+                request = requests.get(question.image_link, timeout=1)
+                question.image_content = request.content
+                logging.info(f"Loaded image: {question.image_link}")
+            except requests.exceptions.RequestException as e:
+                logging.info(f"Failed to load image: {question.image_link}")
+        
+        logging.info(f"Question has image content: {question.image_content}")
+        if question.image_content is not None and b"html" in question.image_content.lower():
+            question.image_content = None
+
+        disable_images = self.config.get('showtextwithimages', DEFAULT_CONFIG['showtextwithimages']) == 'Only show text'
+
+        if not disable_images and question.image_content is not None and b"Not Found" not in question.image_content:
+            self.image = QPixmap()
+            self.image.loadFromData(question.image_content)
+            
+            if self.config.get('showtextwithimages', DEFAULT_CONFIG['showtextwithimages']) == 'Show both':
+                # Show both text and image
+                self.image = self.image.scaledToHeight(self.height() * 12)
+
+                # Create a QLabel for the image
+                self.image_label = MyLabel("", self.startFontSize, self)
+                self.image_label.setPixmap(self.image)
+                self.main_layout.addWidget(self.image_label)
+            elif self.config.get('showtextwithimages', DEFAULT_CONFIG['showtextwithimages']) == 'Only show image':
+                # Show image only
+                self.image = self.image.scaledToWidth(self.width() * 12)
+                self.question_label.setPixmap(self.image)
+
+    def load_video(self):
+        question = self.question
         try:
             # --- Parse YouTube URL variants robustly ---
             video_url = None
@@ -127,7 +137,7 @@ class QuestionWidget(QWidget):
                 video_url = "&".join(parts)
 
             if video_url:
-                if not audio_only or (audio_only and parent.host()):
+                if not audio_only or (audio_only and self.parent.host()):
                     # Embed youtube clip video
                     self.web_view = QWebEngineView()
                     url = f"http://localhost:8081/{video_url}"
@@ -140,7 +150,7 @@ class QuestionWidget(QWidget):
                         QWebEngineSettings.WebAttribute.PlaybackRequiresUserGesture, False
                     )
 
-                    if audio_only or parent.host():
+                    if audio_only or self.parent.host():
                         self.web_view.setFixedHeight(self.height() * 5)
                         self.web_view.setFixedWidth(self.width() * 3)
                     else:
@@ -198,7 +208,7 @@ class HostQuestionWidget(QuestionWidget):
 
 class DailyDoubleWidget(QuestionWidget):
     def __init__(self, question, parent=None):
-        super().__init__(question, parent)
+        super().__init__(question, parent, show_content=False)
         self.question_label.setVisible(False)
         if hasattr(self, 'image_label'):
             self.image_label.setVisible(False)
