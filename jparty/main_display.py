@@ -1,5 +1,5 @@
 from PyQt6.QtGui import QColor, QPalette, QGuiApplication
-from PyQt6.QtCore import QMargins
+from PyQt6.QtCore import QMargins, Qt, QEvent
 
 from PyQt6.QtWidgets import (
     QMainWindow,
@@ -193,6 +193,14 @@ class HostDisplayWindow(DisplayWindow):
 
     def keyPressEvent(self, event):
         self.game.keystroke_manager.call(event.key())
+
+    def changeEvent(self, event):
+        """Monitor window state changes and restore fullscreen if lost."""
+        if event.type() == QEvent.Type.WindowStateChange:
+            # If window is no longer in fullscreen, restore it
+            if not self.isFullScreen():
+                self.showFullScreen()
+        super().changeEvent(event)
 
     def hide_welcome_widgets(self):
         super().hide_welcome_widgets()

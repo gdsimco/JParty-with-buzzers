@@ -12,10 +12,9 @@ import logging
 import json
 import sys, os
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QSizePolicy
-from PyQt6.QtCore import QUrl
+from PyQt6.QtCore import QUrl, Qt, QTimer
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWebEngineCore import QWebEngineSettings
-from PyQt6.QtCore import Qt
 
 from jparty.style import MyLabel, CARDPAL
 from jparty.constants import DEFAULT_CONFIG, VIDEO_PLAY_TIME
@@ -23,6 +22,19 @@ from jparty.utils import get_base_path
 import threading
 import time
 from urllib.parse import urlparse, parse_qs
+
+
+class NoFocusWebEngineView(QWebEngineView):
+    """Custom QWebEngineView that prevents focus stealing."""
+    
+    def focusInEvent(self, event):
+        """Override focusInEvent to prevent the web view from accepting focus."""
+        event.ignore()
+    
+    def focusOutEvent(self, event):
+        """Override focusOutEvent to prevent focus loss handling."""
+        event.ignore()
+
 
 class QuestionWidget(QWidget):
     def __init__(self, question, parent=None, show_content=True):
@@ -138,8 +150,8 @@ class QuestionWidget(QWidget):
 
             if video_url:
                 if not audio_only or (audio_only and self.parent.host()):
-                    # Embed youtube clip video
-                    self.web_view = QWebEngineView()
+                    # Embed youtube clip video using custom web view that prevents focus stealing
+                    self.web_view = NoFocusWebEngineView()
                     url = f"http://localhost:8081/{video_url}"
                     logging.info(f"loading url: {url}")
                     self.web_view.load(QUrl(url))
@@ -149,16 +161,22 @@ class QuestionWidget(QWidget):
                     self.web_view.page().settings().setAttribute(
                         QWebEngineSettings.WebAttribute.PlaybackRequiresUserGesture, False
                     )
+                    self.web_view.page().settings().setAttribute(
+                        QWebEngineSettings.WebAttribute.FocusOnNavigationEnabled, False
+                    )
 
+                    # Set video size with proper 16:9 aspect ratio
                     if audio_only or self.parent.host():
-                        self.web_view.setMaximumHeight(int(self.parent.height() * 0.4))
-                        self.web_view.setMaximumWidth(int(self.parent.width() * 0.3))
+                        # Small video for audio clues
+                        video_height = int(self.parent.height() * 0.25)
+                        video_width = int(video_height * (16/9))
                     else:
-                        self.web_view.setMaximumHeight(int(self.parent.height() * 0.7))
-                        self.web_view.setMaximumWidth(int(self.parent.width() * 0.8))
+                        # Video for player display
+                        video_height = int(self.parent.height() * 0.5)
+                        video_width = int(video_height * (16/9))
                     
-                    # Use size policy instead of fixed sizes to avoid layout issues
-                    self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+                    self.web_view.setFixedHeight(video_height)
+                    self.web_view.setFixedWidth(video_width)
 
                     self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
                     self.main_layout.addWidget(self.web_view, alignment=Qt.AlignmentFlag.AlignCenter)
