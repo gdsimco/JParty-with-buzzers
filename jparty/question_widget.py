@@ -151,11 +151,14 @@ class QuestionWidget(QWidget):
                     )
 
                     if audio_only or self.parent.host():
-                        self.web_view.setFixedHeight(self.height() * 5)
-                        self.web_view.setFixedWidth(self.width() * 3)
+                        self.web_view.setMaximumHeight(int(self.parent.height() * 0.4))
+                        self.web_view.setMaximumWidth(int(self.parent.width() * 0.3))
                     else:
-                        self.web_view.setFixedHeight(self.height() * 12)
-                        self.web_view.setFixedWidth(self.width() * 7)
+                        self.web_view.setMaximumHeight(int(self.parent.height() * 0.7))
+                        self.web_view.setMaximumWidth(int(self.parent.width() * 0.8))
+                    
+                    # Use size policy instead of fixed sizes to avoid layout issues
+                    self.web_view.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
                     self.main_layout.addSpacing(self.main_layout.contentsMargins().top())
                     self.main_layout.addWidget(self.web_view, alignment=Qt.AlignmentFlag.AlignCenter)
