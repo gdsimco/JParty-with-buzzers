@@ -57,19 +57,25 @@ The host sees the answer on the laptop screen and can adjudicate with the arrow 
 - qrcode
 - pyinstaller [>=5.0]
 
+To setup a Python virtual environment and install requirements, run:
+```
+python -m venv jpvenv
+jpvenv/bin/activate  
+pip install -r requirements.txt
+```
+
 To debug, run 
 
-`
-pip install -r requirements.txt;
-cd jparty;
+```
+cd jparty
 python ../run.py
-`
+```
 
 Too build from source, run
 
-`
+```
 pyinstaller -y JParty.spec
-`
+```
 
 ## FAQ
 

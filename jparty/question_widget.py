@@ -188,8 +188,8 @@ class QuestionWidget(QWidget):
 
 
 class HostQuestionWidget(QuestionWidget):
-    def __init__(self, question, parent=None):
-        super().__init__(question, parent, show_content=True)
+    def __init__(self, question, parent=None, show_content=True):
+        super().__init__(question, parent, show_content=show_content)
 
         self.question_label.setText(question.text)
 
@@ -215,8 +215,8 @@ class HostQuestionWidget(QuestionWidget):
 
 
 class DailyDoubleWidget(QuestionWidget):
-    def __init__(self, question, parent=None):
-        super().__init__(question, parent, show_content=False)
+    def __init__(self, question, parent=None, show_content=False):
+        super().__init__(question, parent, show_content=show_content)
         self.question_label.setVisible(False)
 
         self.dd_label = MyLabel("DAILY<br/>DOUBLE!", self.startDDFontSize, self)
@@ -234,8 +234,8 @@ class DailyDoubleWidget(QuestionWidget):
 
 
 class HostDailyDoubleWidget(HostQuestionWidget, DailyDoubleWidget):
-    def __init__(self, question, parent=None):
-        super().__init__(question, parent)
+    def __init__(self, question, parent=None, show_content=False):
+        super().__init__(question, parent, show_content=show_content)
         self.answer_label.setVisible(False)
 
         self.main_layout.setStretchFactor(self.dd_label, 6)

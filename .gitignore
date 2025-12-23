@@ -4,3 +4,4 @@ jparty/config.json
 latest.log
 dist**
 .idea/**
+jpvenv
