@@ -150,9 +150,14 @@ class QuestionWidget(QWidget):
 
             if video_url:
                 if not audio_only or (audio_only and self.parent.host()):
+                    # Add muted parameter for host display of non-audio-only videos
+                    video_url_with_params = video_url
+                    if not audio_only and self.parent.host():
+                        video_url_with_params += "&muted=1"
+                    
                     # Embed youtube clip video using custom web view that prevents focus stealing
                     self.web_view = NoFocusWebEngineView()
-                    url = f"http://localhost:8081/{video_url}"
+                    url = f"http://localhost:8081/{video_url_with_params}"
                     logging.info(f"loading url: {url}")
                     self.web_view.load(QUrl(url))
                     self.web_view.page().settings().setAttribute(
