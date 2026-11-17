@@ -4,3 +4,12 @@ jparty/config.json
 latest.log
 dist**
 .idea/**
+
+web/node_modules/
+web/dist/
+web/.vercel/
+web/test-results/
+
+.npm/
+.local/
+.cache/

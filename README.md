@@ -91,3 +91,7 @@ To use the extension:
 
 ### The QR code doesn't work!
 First, make sure you are on the same wireless network as the computer. If this still doesn't work, it may be an issue with allowing local devices on the network. In this case, you can try another network or try tethering both the phones and the computer to another phone.
+
+## Web recreation
+The browser-based JParty! lives in [web/](web/README.md), preserving the Python app.
+Play at **https://jparty-web.vercel.app**. Includes a board creator, phone buzzers, host/audience screens and playable demo. See its README for parity and free WebRTC limitations.
